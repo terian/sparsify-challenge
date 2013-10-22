@@ -2,8 +2,9 @@
 
 module Sparsify
 
-  def self.sparse(source)
+  def self.sparse(source, options = {separator: "."})
     @result = {}
+    @separator = options[:separator]
     source.each do |key, value|
       unroll_hash(key, value)
     end
@@ -13,15 +14,16 @@ module Sparsify
   def self.unroll_hash(key, value)
     if value.is_a? Hash and !value.empty?
       value.each do |inner_key, inner_value|
-        unroll_hash(key + "." + inner_key, inner_value)
+        unroll_hash(key + @separator + inner_key, inner_value)
       end
     else
       @result.merge!({key => value})
     end
   end
 
-  def self.unsparse(source)
+  def self.unsparse(source, options = {separator: "."})
     result = {}
+    @separator = options[:separator]
     source.each do |key, value|
       result = deep_merge(result, rehash(key, value))
     end
@@ -29,8 +31,8 @@ module Sparsify
   end
 
   def self.rehash(key, value)
-    if key.include?(".")
-      top = key.split(".").first
+    if key.include?(@separator)
+      top = key.split(@separator).first
       {top => rehash(key[top.length + 1..-1], value)}
     else
       {key => value}
